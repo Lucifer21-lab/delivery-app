@@ -27,7 +27,6 @@ const RegisterForm = () => {
         }
     };
 
-    // src/components/auth/RegisterForm.jsx
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -38,16 +37,18 @@ const RegisterForm = () => {
             return;
         }
 
-        console.log('Submitting registration:', formData); // DEBUG
-
         setLoading(true);
         try {
-            const result = await dispatch(register(formData)).unwrap();
-            console.log('Registration successful:', result); // DEBUG
-            toast.success('Registration successful!');
-            navigate('/dashboard');
+            await dispatch(register(formData)).unwrap();
+            navigate('/verify-email');
+            toast.success('OTP sent to your email!');
+
+            // FIX: Save the email to session storage
+            sessionStorage.setItem('emailForVerification', formData.email);
+
+            // Navigate without passing state, as we'll read from storage
+
         } catch (error) {
-            console.error('Registration failed:', error); // DEBUG
             toast.error(error || 'Registration failed');
         } finally {
             setLoading(false);

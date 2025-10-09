@@ -1,48 +1,48 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
 });
 
 exports.sendEmail = async (to, subject, html) => {
-    try {
-        const mailOptions = {
-            from: `"Delivery App" <${process.env.SMTP_USER}>`,
-            to,
-            subject,
-            html
-        };
+  try {
+    const mailOptions = {
+      from: `"Delivery App" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html
+    };
 
-        const info = await transporter.sendMail(mailOptions);
-        console.log('Email sent:', info.messageId);
-        return info;
-    } catch (error) {
-        console.error('Error sending email:', error);
-        throw error;
-    }
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Error sending email:', error);
+    throw error;
+  }
 };
 
 exports.sendWelcomeEmail = async (user) => {
-    const subject = 'Welcome to Delivery App';
-    const html = `
+  const subject = 'Welcome to Delivery App';
+  const html = `
     <h1>Welcome ${user.name}!</h1>
     <p>Thank you for registering with Delivery App.</p>
     <p>You can now create delivery requests or accept deliveries from others.</p>
     <p>Best regards,<br>Delivery App Team</p>
   `;
 
-    await this.sendEmail(user.email, subject, html);
+  await this.sendEmail(user.email, subject, html);
 };
 
 exports.sendDeliveryAcceptedEmail = async (requester, deliveryPerson, delivery) => {
-    const subject = 'Your Delivery Request Was Accepted';
-    const html = `
+  const subject = 'Your Delivery Request Was Accepted';
+  const html = `
     <h1>Great News!</h1>
     <p>Hi ${requester.name},</p>
     <p>${deliveryPerson.name} has accepted your delivery request: "${delivery.title}"</p>
@@ -56,12 +56,12 @@ exports.sendDeliveryAcceptedEmail = async (requester, deliveryPerson, delivery) 
     <p>Best regards,<br>Delivery App Team</p>
   `;
 
-    await this.sendEmail(requester.email, subject, html);
+  await this.sendEmail(requester.email, subject, html);
 };
 
 exports.sendDeliveryCompletedEmail = async (requester, delivery) => {
-    const subject = 'Your Delivery Was Completed';
-    const html = `
+  const subject = 'Your Delivery Was Completed';
+  const html = `
     <h1>Delivery Completed!</h1>
     <p>Hi ${requester.name},</p>
     <p>Your delivery "${delivery.title}" has been successfully completed.</p>
@@ -69,12 +69,26 @@ exports.sendDeliveryCompletedEmail = async (requester, delivery) => {
     <p>Best regards,<br>Delivery App Team</p>
   `;
 
-    await this.sendEmail(requester.email, subject, html);
+  await this.sendEmail(requester.email, subject, html);
+};
+
+exports.sendOtpEmail = async (email, name, otp) => {
+  const subject = 'Your Verification Code';
+  const html = `
+    <div style="font-family: sans-serif; text-align: center; padding: 20px;">
+      <h2>Hi ${name},</h2>
+      <p>Thanks for registering. Please use the following code to verify your email address:</p>
+      <h1 style="font-size: 48px; letter-spacing: 5px; margin: 20px;">${otp}</h1>
+      <p>This code will expire in 10 minutes.</p>
+    </div>
+  `;
+
+  await this.sendEmail(email, subject, html);
 };
 
 exports.sendPasswordResetEmail = async (email, name, resetUrl) => {
-    const subject = 'Password Reset Request';
-    const html = `
+  const subject = 'Password Reset Request';
+  const html = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -157,5 +171,5 @@ exports.sendPasswordResetEmail = async (email, name, resetUrl) => {
     </html>
   `;
 
-    await this.sendEmail(email, subject, html);
+  await this.sendEmail(email, subject, html);
 };

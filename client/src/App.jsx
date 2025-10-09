@@ -15,6 +15,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import CreateDelivery from './pages/CreateDelivery';
 import AvailableDeliveries from './pages/AvailableDeliveries';
@@ -48,6 +49,7 @@ function App() {
           <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/create-delivery" element={<ProtectedRoute><CreateDelivery /></ProtectedRoute>} />

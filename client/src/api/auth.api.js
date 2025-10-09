@@ -2,8 +2,12 @@ import axiosInstance from './axios.conf.js';
 
 export const register = (data) => {
     console.log("Register API called in Frontend (auth.api)");
-    axiosInstance.post('/auth/register', data);
+    return axiosInstance.post('/auth/register', data);
 }
+
+export const verifyEmail = (data) => axiosInstance.post('/auth/verify-email', data);
+
+export const resendOtp = (data) => axiosInstance.post('/auth/resend-otp', data);
 
 export const login = (data) => axiosInstance.post('/auth/login', data);
 

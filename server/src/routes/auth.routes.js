@@ -12,7 +12,9 @@ const {
     refreshToken,
     forgotPassword,
     resetPassword,
-    verifyResetToken
+    verifyResetToken,
+    verifyEmail,
+    resendOtp
 } = require('../controllers/auth.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { validate } = require('../middleware/validation.middleware');
@@ -36,6 +38,19 @@ router.post('/register', authLimiter, [
     body('phone').optional().isMobilePhone().withMessage('Valid phone number required'),
     validate
 ], register);
+
+//verfy email
+router.post('/verify-email', authLimiter, [
+    body('email').isEmail().withMessage('Valid email is required'),
+    body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+    validate
+], verifyEmail);
+
+// Resend OTP
+router.post('/resend-otp', authLimiter, [
+    body('email').isEmail().withMessage('Valid email is required'),
+    validate
+], resendOtp)
 
 // Login
 router.post('/login', authLimiter, [

@@ -18,14 +18,25 @@ export const login = createAsyncThunk(
 export const register = createAsyncThunk(
     'auth/register',
     async (userData, { rejectWithValue }) => {
-        console.log("Register API called in frontend (authSclice)")
         try {
-            const response = authAPI.register(userData);
+            const response = await authAPI.register(userData);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.error || 'Registration failed');
+        }
+    }
+);
+
+export const verifyEmail = createAsyncThunk(
+    'auth/verifyEmail',
+    async (verificationData, { rejectWithValue }) => {
+        try {
+            const response = await authAPI.verifyEmail(verificationData);
             localStorage.setItem('token', response.data.data.accessToken);
             localStorage.setItem('refreshToken', response.data.data.refreshToken);
             return response.data.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.error || 'Registration failed');
+            return rejectWithValue(error.response?.data?.error || 'Verification failed');
         }
     }
 );
@@ -62,7 +73,8 @@ const initialState = {
     refreshToken: localStorage.getItem('refreshToken'),
     isAuthenticated: false,
     loading: false,
-    error: null
+    error: null,
+    registrationStatus: 'idle',
 };
 
 const authSlice = createSlice({
@@ -105,15 +117,30 @@ const authSlice = createSlice({
             .addCase(register.pending, (state) => {
                 state.loading = true;
                 state.error = null;
+                state.registrationStatus = 'pending';
             })
-            .addCase(register.fulfilled, (state, action) => {
+            .addCase(register.fulfilled, (state) => {
+                state.loading = false;
+                state.registrationStatus = 'succeeded';
+            })
+            .addCase(register.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                state.registrationStatus = 'failed';
+            })
+            .addCase(verifyEmail.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(verifyEmail.fulfilled, (state, action) => {
                 state.loading = false;
                 state.isAuthenticated = true;
                 state.token = action.payload.accessToken;
                 state.refreshToken = action.payload.refreshToken;
                 state.user = action.payload.user;
+                state.registrationStatus = 'idle';
             })
-            .addCase(register.rejected, (state, action) => {
+            .addCase(verifyEmail.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })
@@ -138,4 +165,6 @@ const authSlice = createSlice({
 });
 
 export const { logout, clearError, setUser } = authSlice.actions;
+
+// This is the line that was likely missing
 export default authSlice.reducer;
