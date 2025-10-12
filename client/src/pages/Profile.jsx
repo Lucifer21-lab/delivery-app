@@ -5,7 +5,7 @@ import { changePassword } from '../api/auth.api';
 import { toast } from 'react-toastify';
 import {
     FaUser, FaEnvelope, FaPhone, FaLock, FaStar, FaTruck, FaEdit,
-    FaSave, FaTimes, FaCalendar, FaShieldAlt, FaCheckCircle
+    FaSave, FaTimes, FaCalendar, FaShieldAlt, FaCheckCircle, FaVenusMars, FaInfoCircle
 } from 'react-icons/fa';
 
 const Profile = () => {
@@ -14,7 +14,13 @@ const Profile = () => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [showPasswordForm, setShowPasswordForm] = useState(false);
-    const [formData, setFormData] = useState({ name: '', phone: '' });
+    const [formData, setFormData] = useState({
+        name: '',
+        phone: '',
+        gender: '',
+        dob: '',
+        description: ''
+    });
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
         newPassword: '',
@@ -26,7 +32,10 @@ const Profile = () => {
         if (user) {
             setFormData({
                 name: user.name || '',
-                phone: user.phone || ''
+                phone: user.phone || '',
+                gender: user.gender || '',
+                dob: user.dob ? new Date(user.dob).toISOString().split('T')[0] : '',
+                description: user.description || ''
             });
         }
     }, [user]);
@@ -48,7 +57,11 @@ const Profile = () => {
 
         setLoading(true);
         try {
-            await dispatch(updateProfile(formData)).unwrap();
+            // FIX IS HERE: This object now correctly includes all the editable fields.
+            // When you click "Save Changes", this is the data that gets sent.
+            const { name, gender, dob, description } = formData;
+            await dispatch(updateProfile({ name, gender, dob, description })).unwrap();
+
             toast.success('Profile updated successfully!');
             setIsEditing(false);
         } catch (error) {
@@ -87,34 +100,34 @@ const Profile = () => {
 
     const handleCancelEdit = () => {
         setIsEditing(false);
-        setFormData({ name: user?.name || '', phone: user?.phone || '' });
+        setFormData({
+            name: user?.name || '',
+            phone: user?.phone || '',
+            gender: user?.gender || '',
+            dob: user?.dob ? new Date(user.dob).toISOString().split('T')[0] : '',
+            description: user?.description || ''
+        });
     };
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
-                {/* Page Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-gray-900">My Profile</h1>
                     <p className="text-lg text-gray-600 mt-1">Manage your account and delivery statistics.</p>
                 </div>
 
-                {/* Profile Card */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-                    {/* Header Section */}
                     <div className="flex flex-col md:flex-row items-center md:items-start mb-8 pb-8 border-b border-gray-200">
-                        {/* Avatar */}
                         <div className="relative mb-4 md:mb-0 md:mr-8 flex-shrink-0">
                             {user?.avatar ? (
-                                <img src={user.avatar} alt={user.name} className="w-32 h-32 rounded-full border-4 border-white shadow-md" />
+                                <img src={user.avatar} alt={user.name} className="w-32 h-32 rounded-full border-4 border-white shadow-md object-cover" />
                             ) : (
                                 <div className="w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center border-4 border-white shadow-md">
                                     <span className="text-white font-bold text-5xl">{user?.name?.charAt(0).toUpperCase()}</span>
                                 </div>
                             )}
                         </div>
-
-                        {/* User Info */}
                         <div className="flex-1 text-center md:text-left">
                             <h2 className="text-3xl font-bold text-gray-900">{user?.name}</h2>
                             <p className="text-gray-500 text-lg mt-1">{user?.email}</p>
@@ -129,8 +142,6 @@ const Profile = () => {
                                 )}
                             </div>
                         </div>
-
-                        {/* Edit Button */}
                         {!isEditing && (
                             <button
                                 onClick={() => setIsEditing(true)}
@@ -140,15 +151,11 @@ const Profile = () => {
                             </button>
                         )}
                     </div>
-
-                    {/* Stats Section */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
                         <StatCard icon={FaStar} title="Rating" value={user?.rating?.toFixed(1) || 'N/A'} color="yellow" />
                         <StatCard icon={FaTruck} title="Completed" value={`${user?.completedDeliveries || 0} Deliveries`} color="green" />
                         <StatCard icon={FaCalendar} title="Member Since" value={new Date(user?.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} color="blue" />
                     </div>
-
-                    {/* Profile Form or Info */}
                     {isEditing ? (
                         <ProfileEditForm formData={formData} handleChange={handleChange} handleUpdateProfile={handleUpdateProfile} handleCancelEdit={handleCancelEdit} loading={loading} />
                     ) : (
@@ -156,51 +163,72 @@ const Profile = () => {
                     )}
                 </div>
 
-                {/* Security Settings */}
-                <SecuritySettings showPasswordForm={showPasswordForm} setShowPasswordForm={setShowPasswordForm} passwordData={passwordData} handlePasswordChange={handlePasswordChange} handleChangePassword={handleChangePassword} loading={loading} />
+                <SecuritySettings
+                    showPasswordForm={showPasswordForm}
+                    setShowPasswordForm={setShowPasswordForm}
+                    passwordData={passwordData}
+                    handlePasswordChange={handlePasswordChange}
+                    handleChangePassword={handleChangePassword}
+                    loading={loading}
+                />
             </div>
         </div>
     );
 };
 
-// --- Sub-components for better organization ---
+// --- Sub-components ---
 
-const StatCard = ({ icon: Icon, title, value, color }) => {
-    const colors = {
-        yellow: 'from-yellow-50 to-yellow-100 text-yellow-600',
-        green: 'from-green-50 to-green-100 text-green-600',
-        blue: 'from-blue-50 to-blue-100 text-blue-600',
-    };
-    return (
-        <div className={`bg-gradient-to-br ${colors[color]} p-6 rounded-xl text-center transition hover:shadow-md`}>
-            <Icon className={`text-4xl ${colors[color].split(' ')[2]} mx-auto mb-3`} />
-            <p className="text-4xl font-bold text-gray-900">{value}</p>
-            <p className="text-gray-600 font-medium mt-1">{title}</p>
-        </div>
-    );
-};
-
-const ProfileInfo = ({ user }) => (
-    <div className="space-y-4">
-        <InfoField icon={FaEnvelope} label="Email Address" value={user?.email} />
-        <InfoField icon={FaPhone} label="Phone Number" value={user?.phone || 'Not provided'} />
+const StatCard = ({ icon: Icon, title, value, color }) => (
+    <div className={`bg-gradient-to-br from-${color}-50 to-${color}-100 p-6 rounded-xl text-center transition hover:shadow-md`}>
+        <Icon className={`text-4xl text-${color}-600 mx-auto mb-3`} />
+        <p className="text-4xl font-bold text-gray-900">{value}</p>
+        <p className="text-gray-600 font-medium mt-1">{title}</p>
     </div>
 );
 
-const InfoField = ({ icon: Icon, label, value }) => (
-    <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-        <Icon className="text-gray-400 text-xl mr-4" />
+const ProfileInfo = ({ user }) => (
+    <div className="space-y-4">
+        <InfoField icon={FaEnvelope} label="Email Address" value={user?.email} isLocked={true} />
+        <InfoField icon={FaPhone} label="Phone Number" value={user?.phone || 'Not provided'} isLocked={true} />
+        <InfoField icon={FaVenusMars} label="Gender" value={user?.gender || 'Not specified'} />
+        <InfoField icon={FaCalendar} label="Date of Birth" value={user?.dob ? new Date(user.dob).toLocaleDateString('en-CA') : 'Not specified'} />
+        <InfoField icon={FaInfoCircle} label="About Me" value={user?.description || 'Not provided'} />
+    </div>
+);
+
+const InfoField = ({ icon: Icon, label, value, isLocked = false }) => (
+    <div className={`flex items-start p-4 bg-gray-50 rounded-lg ${isLocked ? 'cursor-not-allowed' : ''}`} title={isLocked ? 'This field cannot be changed.' : ''}>
+        <Icon className="text-gray-400 text-xl mr-4 mt-1" />
         <div>
             <p className="text-sm text-gray-500">{label}</p>
-            <p className="font-semibold text-gray-800">{value}</p>
+            <p className="font-semibold text-gray-800 break-words">{value}</p>
         </div>
     </div>
 );
 
 const ProfileEditForm = ({ formData, handleChange, handleUpdateProfile, handleCancelEdit, loading }) => (
     <form onSubmit={handleUpdateProfile} className="space-y-6">
+        <InputWithIcon icon={FaEnvelope} name="email" label="Email Address" value={formData.email} readOnly disabled title="Email cannot be changed." />
+        <InputWithIcon icon={FaPhone} name="phone" label="Phone Number" value={formData.phone || 'Not provided'} readOnly disabled title="Phone cannot be changed." />
         <InputWithIcon icon={FaUser} name="name" label="Full Name" value={formData.name} onChange={handleChange} required />
-        <InputWithIcon icon={FaPhone} name="phone" label="Phone Number" value={formData.phone} onChange={handleChange} placeholder="+1234567890" />
+        <div>
+            <label htmlFor="gender" className="block text-gray-700 font-semibold mb-2">Gender</label>
+            <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><FaVenusMars className="text-gray-400" /></div>
+                <select id="gender" name="gender" value={formData.gender} onChange={handleChange} className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition appearance-none">
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+        <InputWithIcon icon={FaCalendar} name="dob" type="date" label="Date of Birth" value={formData.dob} onChange={handleChange} />
+        <div>
+            <label htmlFor="description" className="block text-gray-700 font-semibold mb-2">About Me</label>
+            <textarea id="description" name="description" rows="4" value={formData.description} onChange={handleChange} maxLength="500" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" placeholder="Tell us a little about yourself..."></textarea>
+            <p className="text-right text-sm text-gray-500 mt-1">{formData.description ? formData.description.length : 0}/500</p>
+        </div>
         <div className="flex gap-4 pt-2">
             <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:bg-indigo-300 flex items-center justify-center gap-2 transition-colors">
                 <FaSave /> {loading ? 'Saving...' : 'Save Changes'}
@@ -246,17 +274,16 @@ const SecuritySettings = ({ showPasswordForm, setShowPasswordForm, passwordData,
     </div>
 );
 
-const InputWithIcon = ({ icon: Icon, name, label, ...props }) => (
+const InputWithIcon = ({ icon: Icon, name, label, disabled, ...props }) => (
     <div>
         <label htmlFor={name} className="block text-gray-700 font-semibold mb-2">{label}</label>
         <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Icon className="text-gray-400" />
             </div>
-            <input id={name} name={name} {...props} className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition" />
+            <input id={name} name={name} {...props} disabled={disabled} className={`w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`} />
         </div>
     </div>
 );
 
 export default Profile;
-

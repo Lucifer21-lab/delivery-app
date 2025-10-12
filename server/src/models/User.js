@@ -29,6 +29,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    gender: {
+        type: String,
+        enum: ['Male', 'Female', 'Other']
+    },
+    dob: {
+        type: Date
+    },
+    description: {
+        type: String,
+        maxlength: [500, 'Description cannot be more than 500 characters']
+    },
     avatar: {
         type: String,
         default: null

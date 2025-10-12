@@ -4,15 +4,9 @@ const jwt = require('jsonwebtoken');
 const { generateToken, generateRefreshToken } = require('../utils/jwt');
 const { ApiResponse, ApiError } = require('../utils/apiResponse');
 const crypto = require('crypto');
-// FIX: Added the missing 'sendOtpEmail' import
 const { sendPasswordResetEmail, sendOtpEmail } = require('../services/email.service');
 const { generateOTP } = require('../utils/encyption');
 
-/**
- * @desc    Handles the initial registration request by saving data to a temporary collection and sending an OTP.
- * @route   POST /api/auth/register
- * @access  Public
- */
 exports.register = async (req, res, next) => {
     try {
         const { name, email, password, phone } = req.body;
@@ -41,11 +35,6 @@ exports.register = async (req, res, next) => {
     }
 };
 
-/**
- * @desc    Login user - with a check for unverified emails
- * @route   POST /api/auth/login
- * @access  Public
- */
 exports.login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -101,15 +90,6 @@ exports.login = async (req, res, next) => {
     }
 };
 
-
-// --- PASTE THE REST OF YOUR CONTROLLER FUNCTIONS BELOW ---
-// (verifyEmail, resendOtp, getMe, etc. are correct from the previous steps)
-
-/**
- * @desc    Verifies the OTP, creates a permanent user, and logs them in.
- * @route   POST /api/auth/verify-email
- * @access  Public
- */
 exports.verifyEmail = async (req, res, next) => {
     try {
         const { email, otp } = req.body;
@@ -158,11 +138,6 @@ exports.verifyEmail = async (req, res, next) => {
     }
 };
 
-/**
- * @desc    Resends the OTP for an unverified registration.
- * @route   POST /api/auth/resend-otp
- * @access  Public
- */
 exports.resendOtp = async (req, res, next) => {
     try {
         const { email } = req.body;
@@ -190,10 +165,6 @@ exports.resendOtp = async (req, res, next) => {
     }
 };
 
-
-// @desc    Get current user
-// @route   GET /api/auth/me
-// @access  Private
 exports.getMe = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id);
@@ -221,12 +192,9 @@ exports.getMe = async (req, res, next) => {
     }
 };
 
-// @desc    Update user profile
-// @route   PUT /api/auth/update-profile
-// @access  Private
 exports.updateProfile = async (req, res, next) => {
     try {
-        const { name, phone, avatar } = req.body;
+        const { name, gender, dob, description } = req.body;
 
         const user = await User.findById(req.user.id);
 
@@ -234,9 +202,19 @@ exports.updateProfile = async (req, res, next) => {
             return next(new ApiError('User not found', 404));
         }
 
-        if (name) user.name = name;
-        if (phone) user.phone = phone;
-        if (avatar) user.avatar = avatar;
+        if (req.body.hasOwnProperty('name')) {
+            user.name = name;
+        }
+        if (req.body.hasOwnProperty('gender')) {
+            user.gender = gender;
+        }
+        if (req.body.hasOwnProperty('dob')) {
+            // Allow clearing the date of birth
+            user.dob = dob || null;
+        }
+        if (req.body.hasOwnProperty('description')) {
+            user.description = description;
+        }
 
         await user.save();
 
@@ -247,7 +225,10 @@ exports.updateProfile = async (req, res, next) => {
                 email: user.email,
                 phone: user.phone,
                 avatar: user.avatar,
-                role: user.role
+                role: user.role,
+                gender: user.gender,
+                dob: user.dob,
+                description: user.description
             }
         }, 'Profile updated successfully'));
     } catch (error) {
@@ -255,9 +236,6 @@ exports.updateProfile = async (req, res, next) => {
     }
 };
 
-// @desc    Change password
-// @route   PUT /api/auth/change-password
-// @access  Private
 exports.changePassword = async (req, res, next) => {
     try {
         const { currentPassword, newPassword } = req.body;
@@ -287,9 +265,6 @@ exports.changePassword = async (req, res, next) => {
     }
 };
 
-// @desc    Refresh access token
-// @route   POST /api/auth/refresh-token
-// @access  Public
 exports.refreshToken = async (req, res, next) => {
     try {
         const { refreshToken } = req.body;
@@ -340,9 +315,6 @@ exports.refreshToken = async (req, res, next) => {
     }
 };
 
-// @desc    Logout user
-// @route   POST /api/auth/logout
-// @access  Private
 exports.logout = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id).select('+refreshToken');
@@ -358,9 +330,6 @@ exports.logout = async (req, res, next) => {
     }
 };
 
-// @desc    Google OAuth callback
-// @route   GET /api/auth/google/callback
-// @access  Public
 exports.googleCallback = async (req, res, next) => {
     try {
         const accessToken = generateToken(req.user._id);
@@ -377,9 +346,6 @@ exports.googleCallback = async (req, res, next) => {
     }
 };
 
-// @desc    Forgot password - Send reset email
-// @route   POST /api/auth/forgot-password
-// @access  Public
 exports.forgotPassword = async (req, res, next) => {
     try {
         const { email } = req.body;
@@ -425,9 +391,6 @@ exports.forgotPassword = async (req, res, next) => {
     }
 };
 
-// @desc    Reset password
-// @route   POST /api/auth/reset-password/:token
-// @access  Public
 exports.resetPassword = async (req, res, next) => {
     try {
         const { token } = req.params;
@@ -467,9 +430,6 @@ exports.resetPassword = async (req, res, next) => {
     }
 };
 
-// @desc    Verify reset token
-// @route   GET /api/auth/verify-reset-token/:token
-// @access  Public
 exports.verifyResetToken = async (req, res, next) => {
     try {
         const { token } = req.params;
