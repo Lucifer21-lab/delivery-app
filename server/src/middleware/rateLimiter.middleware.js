@@ -19,7 +19,7 @@ exports.authLimiter = rateLimit({
 
 // Rate limiter for file uploads
 exports.uploadLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
+    windowMs: 45 * 60 * 1000, // 1 hour
     max: 20, // limit each IP to 20 uploads per hour
     message: 'Too many file uploads, please try again after an hour'
 });
