@@ -45,7 +45,8 @@ const ForgotPassword = () => {
                     </p>
                     <Link
                         to="/login"
-                        className="inline-block bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700"
+                        className="inline-block bg-primary-600 text-blue-800 bg-blue-100
+                         px-6 py-2 rounded-lg hover:bg-primary-700"
                     >
                         Back to Login
                     </Link>
@@ -78,13 +79,15 @@ const ForgotPassword = () => {
                             </div>
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700 disabled:bg-gray-400"
-                        >
-                            {loading ? 'Sending...' : 'Send Reset Link'}
-                        </button>
+                        <div className='flex justify-center'>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-48 bg-primary-600 text-shadow-blue-950 text-blue-600 bg-indigo-100 py-3 rounded-lg font-semibold hover:bg-primary-700 disabled:bg-gray-400"
+                            >
+                                {loading ? 'Sending...' : 'Send Reset Link'}
+                            </button>
+                        </div>
 
                         <div className="mt-4 text-center">
                             <Link to="/login" className="text-primary-600 hover:text-primary-700">

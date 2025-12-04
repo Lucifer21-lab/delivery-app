@@ -225,7 +225,7 @@ exports.getDeliveryById = async (req, res, next) => {
     }
 };
 
-exports.cancelDelivery = async (req, res, next) => {
+exports.deleteMyRequest = async (req, res, next) => {
     try {
         const delivery = await Delivery.findById(req.params.id);
 
@@ -234,20 +234,16 @@ exports.cancelDelivery = async (req, res, next) => {
         }
 
         if (delivery.requester.toString() !== req.user.id) {
-            return next(new ApiError('Not authorized', 403));
+            return next(new ApiError('Not authorized to delete this delivery', 403));
         }
 
-        if (delivery.status !== 'pending') {
-            return next(new ApiError('Cannot cancel this delivery', 400));
+        if (delivery.status !== 'pending' && delivery.status !== 'expired') {
+            return next(new ApiError('Cannot remove a delivery that is already active or completed.', 400));
         }
 
-        delivery.status = 'cancelled';
-        delivery.cancelledAt = new Date();
-        delivery.cancellationReason = req.body.reason || 'Cancelled by requester';
+        await Delivery.findByIdAndDelete(req.params.id);
 
-        await delivery.save();
-
-        res.json(new ApiResponse(delivery, 'Delivery cancelled successfully'));
+        res.json(new ApiResponse(null, 'Delivery request removed successfully'));
     } catch (error) {
         next(error);
     }

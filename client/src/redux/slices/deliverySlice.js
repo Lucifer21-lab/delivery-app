@@ -73,6 +73,18 @@ export const updateDeliveryStatus = createAsyncThunk(
     }
 );
 
+export const deleteMyDelivery = createAsyncThunk(
+    'delivery/deleteMyDelivery',
+    async (deliveryId, { rejectWithValue }) => {
+        try {
+            await deliveryAPI.deleteMyRequest(deliveryId);
+            return deliveryId; // Return the ID on success
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.error);
+        }
+    }
+);
+
 const initialState = {
     availableDeliveries: [],
     myDeliveries: [],
@@ -126,6 +138,12 @@ const deliverySlice = createSlice({
                     d => d._id !== action.payload._id
                 );
                 state.myDeliveries.unshift(action.payload);
+            })
+            .addCase(deleteMyDelivery.fulfilled, (state, action) => {
+                // Remove the deleted delivery from the state
+                state.myDeliveries = state.myDeliveries.filter(
+                    d => d._id !== action.payload
+                );
             });
     }
 });

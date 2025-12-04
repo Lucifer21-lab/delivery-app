@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams, Link } from 'react-router-dom';
-import { fetchMyDeliveries, updateDeliveryStatus } from '../redux/slices/deliverySlice';
-import { FaClipboardList, FaTruck, FaCheckCircle } from 'react-icons/fa';
+import { fetchMyDeliveries, updateDeliveryStatus, deleteMyDelivery } from '../redux/slices/deliverySlice';
+import { FaClipboardList, FaTruck, FaCheckCircle, FaTrash } from 'react-icons/fa';
 import { formatDateTime, formatPrice } from '../utils/formatters';
 import { STATUS_COLORS, STATUS_LABELS } from '../utils/constants';
 import { toast } from 'react-toastify';
@@ -23,6 +23,17 @@ const MyDeliveries = () => {
         setFilter(newFilter);
         if (newFilter === 'all') setSearchParams({});
         else setSearchParams({ type: newFilter });
+    };
+
+    const handleDelete = async (deliveryId) => {
+        if (window.confirm('Are you sure you want to permanently remove this delivery request?')) {
+            try {
+                await dispatch(deleteMyDelivery(deliveryId)).unwrap();
+                toast.success('Delivery request removed successfully!');
+            } catch (error) {
+                toast.error(error || 'Failed to remove delivery request');
+            }
+        }
     };
 
     const handleStatusUpdate = async (deliveryId, newStatus) => {
@@ -191,6 +202,16 @@ const MyDeliveries = () => {
                                         >
                                             <FaCheckCircle />
                                             <span>Mark Complete</span>
+                                        </button>
+                                    )}
+
+                                    {isRequester && (delivery.status === 'pending' || delivery.status === 'expired') && (
+                                        <button
+                                            onClick={() => handleDelete(delivery._id)}
+                                            className="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-red-700 transition"
+                                        >
+                                            <FaTrash />
+                                            <span>Remove Request</span>
                                         </button>
                                     )}
                                 </div>

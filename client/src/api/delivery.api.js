@@ -20,5 +20,5 @@ export const acceptDelivery = (id) =>
 export const updateDeliveryStatus = (id, status) =>
     axiosInstance.patch(`/deliveries/${id}/status`, { status });
 
-export const cancelDelivery = (id, reason) =>
-    axiosInstance.delete(`/deliveries/${id}`, { data: { reason } });
+export const deleteMyRequest = (id) =>
+    axiosInstance.delete(`/deliveries/${id}`);

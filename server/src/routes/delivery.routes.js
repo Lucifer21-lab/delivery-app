@@ -7,7 +7,7 @@ const {
     updateDeliveryStatus,
     getMyDeliveries,
     getDeliveryById,
-    cancelDelivery
+    deleteMyRequest
 } = require('../controllers/delivery.controller');
 const { protect } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/role.middleware');
@@ -19,7 +19,6 @@ const router = express.Router();
 
 router.use(protect);
 
-// Create delivery with rate limiting
 router.post('/', deliveryCreationLimiter, upload.array('images', 5), [
     body('title').trim().notEmpty().withMessage('Title is required')
         .isLength({ max: 100 }).withMessage('Title must not exceed 100 characters'),
@@ -31,19 +30,14 @@ router.post('/', deliveryCreationLimiter, upload.array('images', 5), [
     validate
 ], createDelivery);
 
-// Get available deliveries (excluding user's own)
 router.get('/available', getAvailableDeliveries);
 
-// Get my deliveries
 router.get('/my', getMyDeliveries);
 
-// Get single delivery
 router.get('/:id', getDeliveryById);
 
-// Accept delivery (anyone except requester)
 router.post('/:id/accept', acceptDelivery);
 
-// Update delivery status
 router.patch('/:id/status', [
     body('status')
         .isIn(['in_progress', 'completed', 'cancelled'])
@@ -51,7 +45,6 @@ router.patch('/:id/status', [
     validate
 ], updateDeliveryStatus);
 
-// Cancel delivery
-router.delete('/:id', cancelDelivery);
+router.delete('/:id', deleteMyRequest);
 
 module.exports = router;
