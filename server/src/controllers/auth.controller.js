@@ -6,6 +6,7 @@ const { ApiResponse, ApiError } = require('../utils/apiResponse');
 const crypto = require('crypto');
 const { sendPasswordResetEmail, sendOtpEmail } = require('../services/email.service');
 const { generateOTP } = require('../utils/encyption');
+const cloudinary = require('../config/cloudinary');
 
 exports.register = async (req, res, next) => {
     try {
@@ -83,7 +84,17 @@ exports.login = async (req, res, next) => {
         res.json(new ApiResponse({
             accessToken,
             refreshToken,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar, phone: user.phone }
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+                phone: user.phone,
+                gender: user.gender,       // Add this
+                dob: user.dob,             // Add this
+                description: user.description // Add this
+            }
         }, 'Login successful'));
     } catch (error) {
         next(error);
@@ -128,7 +139,16 @@ exports.verifyEmail = async (req, res, next) => {
         res.status(201).json(new ApiResponse({
             accessToken,
             refreshToken,
-            user: { id: user._id, name: user.name, email: user.email, role: user.role, phone: user.phone }
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                gender: user.gender,       // Add this
+                dob: user.dob,             // Add this
+                description: user.description // Add this
+            }
         }, 'Registration successful! Welcome.'));
     } catch (error) {
         if (error.code === 11000) {
@@ -184,7 +204,10 @@ exports.getMe = async (req, res, next) => {
                 completedDeliveries: user.completedDeliveries,
                 rating: user.rating,
                 isEmailVerified: user.isEmailVerified,
-                createdAt: user.createdAt
+                createdAt: user.createdAt,
+                gender: user.gender,
+                dob: user.dob,
+                description: user.description
             }
         }));
     } catch (error) {
@@ -194,7 +217,7 @@ exports.getMe = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
     try {
-        const { name, gender, dob, description } = req.body;
+        const { name, gender, dob, description, avatar } = req.body;
 
         const user = await User.findById(req.user.id);
 
@@ -204,17 +227,27 @@ exports.updateProfile = async (req, res, next) => {
 
         if (req.body.hasOwnProperty('name')) {
             user.name = name;
+            console.log('Name updated to :- ', name);
         }
         if (req.body.hasOwnProperty('gender')) {
             user.gender = gender;
+            console.log('Name updated to :- ', gender);
         }
         if (req.body.hasOwnProperty('dob')) {
             // Allow clearing the date of birth
             user.dob = dob || null;
+            console.log('Name updated to :- ', dob);
         }
         if (req.body.hasOwnProperty('description')) {
             user.description = description;
+            console.log('Name updated to :- ', description);
         }
+        if (req.body.hasOwnProperty('avatar')) {
+            user.avatar = avatar;
+            console.log('Name updated to :- ', avatar);
+        }
+
+        // avatar update code
 
         await user.save();
 
@@ -330,17 +363,21 @@ exports.logout = async (req, res, next) => {
     }
 };
 
+// server/src/controllers/auth.controller.js
 exports.googleCallback = async (req, res, next) => {
     try {
+        if (req.user.isNewGoogleUser) {
+            // Redirect to a frontend form to collect password and phone
+            const data = Buffer.from(JSON.stringify(req.user.profile)).toString('base64');
+            return res.redirect(`${process.env.CLIENT_URL}/complete-google-signup?data=${data}`);
+        }
+
         const accessToken = generateToken(req.user._id);
         const refreshToken = generateRefreshToken(req.user._id);
-
         req.user.refreshToken = refreshToken;
         await req.user.save();
 
-        res.redirect(
-            `${process.env.CLIENT_URL}/auth/success?accessToken=${accessToken}&refreshToken=${refreshToken}`
-        );
+        res.redirect(`${process.env.CLIENT_URL}/auth/success?accessToken=${accessToken}&refreshToken=${refreshToken}`);
     } catch (error) {
         next(error);
     }

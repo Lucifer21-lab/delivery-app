@@ -1,4 +1,4 @@
-import axiosInstance from './axios.config';
+import axiosInstance from './axios.conf';
 
 export const uploadSingleFile = (file) => {
     const formData = new FormData();

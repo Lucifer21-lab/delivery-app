@@ -59,8 +59,9 @@ class AuthService {
         if (!user) {
             throw new ErrorHandler('User not found', 404);
         }
+        console.log('User found')
 
-        const allowedUpdates = ['name', 'phone', 'avatar'];
+        const allowedUpdates = ['name', 'avatar', 'gender', 'dob', 'description'];
         const updates = {};
 
         for (const key of allowedUpdates) {

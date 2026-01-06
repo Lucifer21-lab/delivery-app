@@ -90,9 +90,26 @@ router.get('/google', passport.authenticate('google', {
 }));
 
 router.get('/google/callback',
-    passport.authenticate('google', { failureRedirect: '/login', session: false }),
+    passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL}/login`, session: false }),
     googleCallback
 );
+
+// server/src/routes/auth.routes.js
+router.post('/google/complete', [
+    body('password').isLength({ min: 6 }).withMessage('Password must be 6+ characters'),
+    body('phone').isMobilePhone().withMessage('Valid phone required'),
+    validate
+], async (req, res) => {
+    const { googleId, name, email, avatar, password, phone } = req.body;
+
+    const user = await User.create({
+        googleId, name, email, avatar, password, phone, isEmailVerified: true
+    });
+
+    const accessToken = generateToken(user._id);
+    const refreshToken = generateRefreshToken(user._id);
+    res.json(new ApiResponse({ accessToken, refreshToken, user }));
+});
 
 // ============================================
 // PROTECTED ROUTES

@@ -8,9 +8,11 @@ import {
     FaSave, FaTimes, FaCalendar, FaShieldAlt, FaCheckCircle, FaVenusMars, FaInfoCircle
 } from 'react-icons/fa';
 
+
 const Profile = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
+    console.log(user);
 
     const [isEditing, setIsEditing] = useState(false);
     const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -59,9 +61,9 @@ const Profile = () => {
         try {
             // FIX IS HERE: This object now correctly includes all the editable fields.
             // When you click "Save Changes", this is the data that gets sent.
-            const { name, gender, dob, description } = formData;
-            await dispatch(updateProfile({ name, gender, dob, description })).unwrap();
-
+            const { name, gender, dob, description, avatar } = formData;
+            await dispatch(updateProfile({ name, gender, dob, description, avatar })).unwrap();
+            console.log('page -> Profile -> ', name, gender, dob, description);
             toast.success('Profile updated successfully!');
             setIsEditing(false);
         } catch (error) {

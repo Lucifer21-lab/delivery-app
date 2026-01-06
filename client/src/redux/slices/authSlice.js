@@ -60,6 +60,7 @@ export const updateProfile = createAsyncThunk(
     async (data, { rejectWithValue }) => {
         try {
             const response = await authAPI.updateProfile(data);
+            console.log('authSlice', data);
             return response.data.data.user;
         } catch (error) {
             return rejectWithValue(error.response?.data?.error);
@@ -72,7 +73,7 @@ const initialState = {
     token: localStorage.getItem('token'),
     refreshToken: localStorage.getItem('refreshToken'),
     isAuthenticated: false,
-    loading: false,
+    loading: !!localStorage.getItem('token'),
     error: null,
     registrationStatus: 'idle',
 };
@@ -158,8 +159,16 @@ const authSlice = createSlice({
                 state.user = null;
                 state.token = null;
             })
+            .addCase(updateProfile.pending, (state) => {
+                state.loading = true;
+            })
             .addCase(updateProfile.fulfilled, (state, action) => {
+                state.loading = false; // Set loading to false
                 state.user = action.payload;
+            })
+            .addCase(updateProfile.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
             });
     }
 });

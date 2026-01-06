@@ -124,7 +124,7 @@ const RegisterForm = () => {
             {/* Phone */}
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone (Optional)
+                    Phone
                 </label>
                 <div className="relative">
                     <FaPhone className="absolute left-3 top-3 text-gray-400" />
